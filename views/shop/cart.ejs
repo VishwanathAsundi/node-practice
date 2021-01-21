@@ -1,12 +1,18 @@
     <%- include('../includes/head.ejs') %>
-        <link rel="stylesheet" href="/css/forms.css" />
-        <link rel="stylesheet" href="/css/product.css" />
+    <link rel="stylesheet" href="/css/forms.css" />
+    <link rel="stylesheet" href="/css/product.css" />
     </head>
 
-  <body>
-    <%- include('../includes/navigation.ejs') %>
+    <body>
+      <%- include('../includes/navigation.ejs') %>
 
-    <main>
-      <h1>Cart Items are...</h1>
+      <main>
+        <% if(products.length>0) {%>
+        <% products.forEach(p=>{ %>
+        <h1><%= p.product.title %>: price= <%= p.product.price %> : Quantity=<%= p.qty %></h1>
+        <%})%>
+        <% }else{ %>
+        <h1>Your cart is empty</h1>
+        <%}%>
     </main>
   <%- include('../includes/end.ejs') %>

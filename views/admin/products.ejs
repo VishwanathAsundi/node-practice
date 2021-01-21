@@ -4,10 +4,7 @@
 
     <body>
       <%- include('../includes/navigation.ejs') %>
-
       <main>
-        <h1>My Products</h1>
-        <p>List of all the products...</p>
         <% if(prods.length>0){ %>
         <div class="grid">
           <% prods.forEach((product)=>{ %>
@@ -25,13 +22,14 @@
               </p>
             </div>
             <div class="card__actions">
-              <button class="btn">Edit product</button>
+              <a href="/admin/edit-product/<%= product.id %>" class="btn">Edit</button>
+                <a href="/admin/delete-product/<%= product.id %>" class="btn">Delete</button>
             </div>
           </article>
           <% }) %>
         </div>
         <% }else { %>
-        <h1>No products found!</h1>
+        <h1>There are no products. Add product</h1>
         <% } %>
       </main>
       <%- include('../includes/end.ejs') %>
