@@ -24,19 +24,29 @@ exports.postUpdateProduct = (req, res, next) => {
         description
     } = req.body;
     let product = new Product(productId, title, imageUrl, price, description);
-    product.Save();
-    res.redirect('/');
+    product.Save().then(() => {
+        res.redirect('/');
+    }).catch(e => {
+        console.log(e);
+    });
+
 }
 exports.deleteProduct = (req, res, next) => {
     const prodId = req.params.productId;
-    console.log(prodId, 'prodId');
-    Product.remove(prodId, products => {
-        res.render('admin/products', {
-            prods: products,
-            path: '/admin/products',
-            pageTitle: 'Admin Products',
+    Product.remove(prodId).then(() => {
+        Product.fetchAll().then(([products, content]) => {
+            res.render('admin/products', {
+                prods: products,
+                path: '/admin/products',
+                pageTitle: 'Admin Products',
+            })
+        }).catch(e => {
+            console.log(e);
         })
-    })
+
+    }).catch(e => {
+        console.log(e);
+    });
 }
 
 exports.getAddProduct = (req, res, next) => {

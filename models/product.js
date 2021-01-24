@@ -10,11 +10,16 @@ module.exports = class Product {
         this.description = description;
     }
     Save() {
-        return db.execute('INSERT INTO products (title,price,imageUrl,description) VALUES (?,?,?,?)', [this.title, this.price, this.imageUrl, this.description]);
+        if (!this.id) {
+            return db.execute('INSERT INTO products (title,price,imageUrl,description) VALUES (?,?,?,?)', [this.title, this.price, this.imageUrl, this.description]);
+        } else {
+            return db.execute('UPDATE products SET title=?,price=?,imageUrl=?,description=? WHERE id=?', [this.title, this.price, this.imageUrl, this.description, this.id]);
+        }
+
     }
 
-    static remove(prodId, cb) {
-
+    static remove(prodId) {
+        return db.execute('DELETE FROM products WHERE id=?', [prodId]);
     }
 
     static fetchAll() {
