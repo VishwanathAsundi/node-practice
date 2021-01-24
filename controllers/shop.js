@@ -5,13 +5,17 @@ const path = require('path');
 let p = path.join(path.dirname(process.mainModule.filename), 'data', 'cart.json');
 
 exports.getIndex = (req, res, next) => {
-    Product.fetchAll(products => {
-        res.render('shop/index', {
-            prods: products,
-            pageTitle: 'Shop',
-            path: '/',
+    Product.fetchAll()
+        .then(([rows, fileContent]) => {
+            res.render('shop/index', {
+                prods: rows,
+                pageTitle: 'Shop',
+                path: '/',
+            });
+        })
+        .catch(e => {
+            console.log(e);
         });
-    });
 }
 exports.getProduct = (req, res, next) => {
     const prodId = req.params.productId;
@@ -25,14 +29,18 @@ exports.getProduct = (req, res, next) => {
 }
 
 exports.getShopProducts = (req, res, next) => {
-    Product.fetchAll(products => {
-        res.render('shop/product-list', {
-            prods: products,
-            pageTitle: 'Products',
-            path: '/products',
-            hasProducts: products.length > 0,
+    Product.fetchAll()
+        .then(([rows, fileContent]) => {
+            res.render('shop/product-list', {
+                prods: rows,
+                pageTitle: 'Products',
+                path: '/products',
+                hasProducts: rows.length > 0,
+            });
+        })
+        .catch(e => {
+            console.log(e);
         });
-    });
 }
 
 exports.postCart = (req, res, next) => {
