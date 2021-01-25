@@ -22,11 +22,11 @@
               </p>
             </div>
             <div class="card__actions">
-              <a href="/admin/edit-product/<%= product.id %>" class="btn">Edit</button>
-                <a href="/admin/delete-product/<%= product.id %>" class="btn">Delete</button>
+              <a class="btn" href="/admin/delete-product/<%= product.id %>">Delete</button>
+                <a href="/admin/edit-product/<%= product.id %>">Edit</button>
             </div>
           </article>
-          <% }) %>
+          <% }); %>
         </div>
         <% }else { %>
         <h1>There are no products. Add product</h1>

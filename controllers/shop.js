@@ -5,25 +5,25 @@ const path = require('path');
 let p = path.join(path.dirname(process.mainModule.filename), 'data', 'cart.json');
 
 exports.getIndex = (req, res, next) => {
-    Product.fetchAll()
-        .then(([rows, fileContent]) => {
+    Product.findAll()
+        .then(products => {
             res.render('shop/index', {
-                prods: rows,
+                prods: products,
                 pageTitle: 'Shop',
                 path: '/',
             });
         })
         .catch(e => {
             console.log(e);
-        });
+        })
 }
 exports.getProduct = (req, res, next) => {
     const prodId = req.params.productId;
-    Product.findProductById(prodId)
-        .then(([prod]) => {
+    Product.findByPk(prodId)
+        .then(prod => {
             res.render('shop/detail', {
-                product: prod[0],
-                pageTitle: prod[0].title,
+                product: prod,
+                pageTitle: prod.title,
                 path: '/products'
             })
         }).catch(e => {
@@ -32,18 +32,18 @@ exports.getProduct = (req, res, next) => {
 }
 
 exports.getShopProducts = (req, res, next) => {
-    Product.fetchAll()
-        .then(([rows, fileContent]) => {
+    Product.findAll()
+        .then(products => {
             res.render('shop/product-list', {
-                prods: rows,
+                prods: products,
                 pageTitle: 'Products',
                 path: '/products',
-                hasProducts: rows.length > 0,
+                hasProducts: products.length > 0,
             });
         })
         .catch(e => {
             console.log(e);
-        });
+        })
 }
 
 exports.postCart = (req, res, next) => {
@@ -78,23 +78,26 @@ exports.getCartProducts = (req, res, next) => {
         let cart = JSON.parse(fileContent);
         let cartProducts = [];
         if (!err) {
-            Product.fetchAll(products => {
-                for (product of products) {
-                    let cartProduct = cart.cart_products.find(p => p.id == product.id);
-                    if (cartProduct) {
-                        cartProducts.push({
-                            product: product,
-                            qty: cartProduct.qty
-                        });
+            Product.findAll()
+                .then(products => {
+                    for (product of products) {
+                        let cartProduct = cart.cart_products.find(p => p.id == product.id);
+                        if (cartProduct) {
+                            cartProducts.push({
+                                product: product,
+                                qty: cartProduct.qty
+                            });
+                        }
                     }
-                }
-                res.render('/shop/cart', {
-                    path: '/cart',
-                    pageTitle: 'Your cart',
-                    products: cartProducts
+                    res.render('/shop/cart', {
+                        path: '/cart',
+                        pageTitle: 'Your cart',
+                        products: cartProducts
+                    })
                 })
-            });
-
+                .catch(e => {
+                    console.log(e);
+                })
 
         }
     })

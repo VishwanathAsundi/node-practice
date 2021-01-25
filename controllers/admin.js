@@ -7,9 +7,13 @@ exports.postAddProduct = (req, res, next) => {
         price,
         description
     } = req.body;
-    let product = new Product(null, title, imageUrl, price, description);
-    product.Save().then(() => {
-        res.redirect('/');
+    Product.create({
+        title: title,
+        imageUrl: imageUrl,
+        price: price,
+        description: description
+    }).then(res => {
+        console.log("Created a product");
     }).catch(e => {
         console.log(e);
     });
@@ -76,7 +80,7 @@ exports.getEditProduct = (req, res, next) => {
 };
 
 exports.getAdminProducts = (req, res, next) => {
-    Product.fetchAll().then(([products, content]) => {
+    Product.findAll().then(products => {
         res.render('admin/products', {
             prods: products,
             path: '/admin/products',
