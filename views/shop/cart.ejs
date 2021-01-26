@@ -9,7 +9,7 @@
       <main>
         <% if(products.length>0) {%>
         <% products.forEach(p=>{ %>
-        <h1><%= p.product.title %>: price= <%= p.product.price %> : Quantity=<%= p.qty %></h1>
+        <h1><%= p.title %>: price= <%= p.price %> : Quantity=<%= p.cartItem.quantity %></h1>
         <%})%>
         <% }else{ %>
         <h1>Your cart is empty</h1>

@@ -7,13 +7,15 @@ exports.postAddProduct = (req, res, next) => {
         price,
         description
     } = req.body;
-    Product.create({
+
+    req.user.createProduct({
         title: title,
         imageUrl: imageUrl,
         price: price,
         description: description
-    }).then(res => {
+    }).then(result => {
         console.log("Created a product");
+        res.redirect('/admin/products');
     }).catch(e => {
         console.log(e);
     });
@@ -27,9 +29,15 @@ exports.postUpdateProduct = (req, res, next) => {
         price,
         description
     } = req.body;
-    let product = new Product(productId, title, imageUrl, price, description);
-    product.Save().then(() => {
-        res.redirect('/');
+    Product.findByPk(productId).then(prod => {
+        prod.title = title;
+        prod.imageUrl = imageUrl;
+        prod.price = price;
+        prod.description = description;
+        return prod.save();
+    }).then(result => {
+        console.log("Product gets updated!");
+        res.redirect('/admin/products');
     }).catch(e => {
         console.log(e);
     });
@@ -37,20 +45,13 @@ exports.postUpdateProduct = (req, res, next) => {
 }
 exports.deleteProduct = (req, res, next) => {
     const prodId = req.params.productId;
-    Product.remove(prodId).then(() => {
-        Product.fetchAll().then(([products, content]) => {
-            res.render('admin/products', {
-                prods: products,
-                path: '/admin/products',
-                pageTitle: 'Admin Products',
-            })
-        }).catch(e => {
-            console.log(e);
-        })
+    Product.findByPk(prodId).then(prod => {
+        return prod.destroy();
+    }).then(result => {
+        console.log("product deleted!");
+        res.redirect('/admin/products');
 
-    }).catch(e => {
-        console.log(e);
-    });
+    }).catch(e => console.log(e));
 }
 
 exports.getAddProduct = (req, res, next) => {
@@ -67,20 +68,30 @@ exports.getAddProduct = (req, res, next) => {
 
 exports.getEditProduct = (req, res, next) => {
     const prodId = req.params.productId;
-    Product.findProductById(prodId).then(([product]) => {
-        res.render('admin/edit-product', {
-            pageTitle: 'Edit Product',
-            path: '/admin/edit-product',
-            product: product[0],
-            editing: true
-        });
-    }).catch(e => {
-        console.log(e);
-    });
+    req.user.getProducts({
+            where: {
+                id: prodId
+            }
+        })
+        .then(products => {
+            let product = products[0];
+            if (!product) {
+                res.redirect('/');
+            }
+            res.render('admin/edit-product', {
+                pageTitle: 'Edit Product',
+                path: '/admin/edit-product',
+                product: product,
+                editing: true
+            });
+        })
+        .catch(e => {
+            console.log(e);
+        })
 };
 
 exports.getAdminProducts = (req, res, next) => {
-    Product.findAll().then(products => {
+    req.user.getProducts().then(products => {
         res.render('admin/products', {
             prods: products,
             path: '/admin/products',

@@ -48,16 +48,43 @@ exports.getShopProducts = (req, res, next) => {
 
 exports.postCart = (req, res, next) => {
     const prodId = req.body.productId;
-    Product.findProductById(prodId)
-        .then(([prod]) => {
-            Cart.addProduct(prodId, prod[0].price);
-        }).catch(e => {
+    let fetchedCart;
+    let newQuantity = 1;
+    req.user.getCart()
+        .then(cart => {
+            fetchedCart = cart;
+            return cart.getProducts({
+                where: {
+                    id: prodId
+                }
+            });
+        })
+        .then(products => {
+            let product;
+            if (products.length > 0) {
+                product = products[0];
+            }
+
+            if (product) {
+                newQuantity = product.cartItem.quantity + 1;
+                return product;
+            }
+            return Product.findByPk(prodId)
+
+        })
+        .then(product => {
+            return fetchedCart.addProduct(product, {
+                through: {
+                    quantity: newQuantity
+                }
+            })
+        }).then(() => {
+            res.redirect('/cart');
+        })
+        .catch(e => {
             console.log(e);
-        });
-    res.render('shop/cart', {
-        path: "/cart",
-        pageTitle: "Your cart"
-    })
+        })
+
 
 }
 exports.getOrders = (req, res, next) => {
@@ -74,31 +101,19 @@ exports.getCheckout = (req, res, next) => {
 }
 
 exports.getCartProducts = (req, res, next) => {
-    fs.readFile(p, (err, fileContent) => {
-        let cart = JSON.parse(fileContent);
-        let cartProducts = [];
-        if (!err) {
-            Product.findAll()
-                .then(products => {
-                    for (product of products) {
-                        let cartProduct = cart.cart_products.find(p => p.id == product.id);
-                        if (cartProduct) {
-                            cartProducts.push({
-                                product: product,
-                                qty: cartProduct.qty
-                            });
-                        }
-                    }
-                    res.render('/shop/cart', {
-                        path: '/cart',
-                        pageTitle: 'Your cart',
-                        products: cartProducts
-                    })
-                })
-                .catch(e => {
-                    console.log(e);
-                })
+    req.user.getCart().then(cart => {
+        cart.getProducts().then(products => {
+            console.log(products, "products");
+            res.render('shop/cart', {
+                path: '/cart',
+                pageTitle: 'Your cart',
+                products: products
+            })
+        }).catch(e => {
+            console.log(e)
+        });
 
-        }
+    }).catch(e => {
+        console.log(e);
     })
 }
