@@ -1,10 +1,10 @@
 const path = require('path');
 
+const mongoose = require('mongoose');
+
 const express = require('express');
 const bodyParser = require('body-parser');
 const errorController = require('./controllers/errors');
-
-const mongoConnect = require('./util/database').mongoConnect;
 
 const app = express();
 
@@ -18,8 +18,8 @@ const adminRoutes = require('./routes/admin');
 const shopRoutes = require('./routes/shop');
 
 app.use((req, res, next) => {
-    User.findById("60113c8d5f1e1ea7affc8d88").then(user => {
-        req.user = new User(user.name, user.email, user.cart, user._id);
+    User.findById("60128a2b215c49199e79d65f").then(user => {
+        req.user = user;
         next();
     }).then(e => {
         console.log(e);
@@ -36,6 +36,23 @@ app.use(shopRoutes);
 
 app.use(errorController.getNotFound);
 
-mongoConnect(() => {
+mongoose.connect('mongodb+srv://xyz:xyz@cluster0.6lk21.mongodb.net/shop?retryWrites=true&w=majority', {
+    useUnifiedTopology: true,
+    useNewUrlParser: true
+}).then(result => {
+    User.findOne().then(u => {
+        if (!u) {
+            let user = new User({
+                name: "Vishwa",
+                email: "test@vishwa.com",
+                cart: {
+                    items: []
+                }
+            })
+            user.save();
+        }
+    })
     app.listen(3000);
-})
+}).catch(e => {
+    console.log(e);
+});
