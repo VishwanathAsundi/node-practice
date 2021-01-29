@@ -1,5 +1,17 @@
+const crypto = require('crypto');
+
 const bcrypt = require('bcryptjs');
 const User = require('../models/user');
+
+const nodemailer = require('nodemailer');
+
+const sendGridTransport = require('nodemailer-sendgrid-transport');
+
+const transporter = nodemailer.createTransport(sendGridTransport({
+    auth: {
+        api_key: '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'
+    }
+}))
 
 exports.getLogin = (req, res, next) => {
     let msg = req.flash('user');
@@ -96,6 +108,15 @@ exports.postSignup = (req, res, next) => {
                     return user.save();
                 }).then(result => {
                     res.redirect('/login');
+                    return transporter.sendMail({
+                        to: email,
+                        from: 'vishwanathasundi1997@gmail.com',
+                        subject: "SignUp Completed",
+                        html: '<h1>Hey, Sign up is succeded!</h1>'
+                    })
+
+                }).catch(e => {
+                    console.log(e);
                 })
 
         })
@@ -103,3 +124,107 @@ exports.postSignup = (req, res, next) => {
             console.log(err);
         });
 };
+exports.getReset = (req, res, next) => {
+    let msg = req.flash('error');
+    let error;
+    if (msg.length > 0) {
+        error = msg[0];
+    } else {
+        error = null;
+    }
+    res.render('auth/reset', {
+        path: '/reset',
+        pageTitle: 'Reset Password',
+        loginError: error
+    });
+};
+
+exports.postReset = (req, res, next) => {
+    const email = req.body.email;
+    crypto.randomBytes(32, (err, buffer) => {
+        if (err) {
+            console.log(err);
+            return res.redirect('/reset');
+        }
+        const token = buffer.toString('hex');
+        User.findOne({
+            email: email
+        }).then(user => {
+            if (!user) {
+                req.flash('error', 'No matching user is found with that e-mail.')
+                return res.redirect('/reset');
+            }
+            user.resetToken = token;
+            user.resetTokenExpire = Date.now() + 3600000;
+            return user.save();
+        }).then(result => {
+            res.redirect('/');
+            return transporter.sendMail({
+                to: email,
+                from: 'vishwanathasundi1997@gmail.com',
+                subject: "Password Reset",
+                html: `<p>You requested for password reset</p>
+                        <p>Click the <a href=http://localhost:3000/reset/${token}>link</a> to reset your password!</p>
+                `
+            })
+        }).catch(e => {
+            console.log(e);
+        })
+
+    })
+
+}
+exports.getNewPassword = (req, res, next) => {
+    let token = req.params.token;
+    console.log(token, "token");
+    User.findOne({
+        resetToken: token,
+        resetTokenExpire: {
+            $gt: Date.now()
+        }
+    }).then(user => {
+        let msg = req.flash('error');
+        let error;
+        if (msg.length > 0) {
+            error = msg[0];
+        } else {
+            error = null;
+        }
+        res.render('auth/new-password', {
+            path: '/new-password',
+            pageTitle: 'Update password',
+            loginError: error,
+            userId: user._id,
+            resetToken: token
+        });
+    }).catch(e => {
+        console.log(e);
+    })
+}
+exports.updatePassword = (req, res, next) => {
+    const newPassword = req.body.password;
+    const userId = req.body.userId;
+    const resetToken = req.body.resetToken;
+    let currentUser;
+
+    User.findOne({
+        resetToken: resetToken,
+        resetTokenExpire: {
+            $gt: Date.now()
+        },
+        _id: userId
+    }).then(user => {
+        currentUser = user;
+        return bcrypt.hash(newPassword, 12);
+    }).then(hashedPassword => {
+        currentUser.password = hashedPassword;
+        currentUser.resetToken = undefined;
+        currentUser.resetTokenExpire = undefined;
+        return currentUser.save();
+    }).then(result => {
+        console.log("Password update is success");
+        res.redirect('/login');
+    }).catch(e => {
+        console.log(e);
+    })
+}
