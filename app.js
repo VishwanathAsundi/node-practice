@@ -14,7 +14,9 @@ const session = require('express-session');
 
 const MongoDBStore = require('connect-mongodb-session')(session);
 
+const csrf = require('csurf');
 
+const flash = require('connect-flash');
 
 app.set('view engine', 'ejs');
 app.set('views', 'views');
@@ -43,7 +45,15 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     store: store
-}))
+}));
+
+app.use(flash());
+
+const csrfProtection = csrf();
+
+
+app.use(csrfProtection);
+
 app.use((req, res, next) => {
     if (!req.session.user) {
         return next();
@@ -56,6 +66,12 @@ app.use((req, res, next) => {
     })
 });
 
+app.use((req, res, next) => {
+    res.locals.isAuthenticated = req.session.isLoggedIn;
+    res.locals.csrfToken = req.csrfToken();
+    next();
+})
+
 app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
@@ -66,18 +82,6 @@ mongoose.connect('mongodb+srv://xyz:xyz@cluster0.6lk21.mongodb.net/shop?retryWri
     useUnifiedTopology: true,
     useNewUrlParser: true
 }).then(result => {
-    User.findOne().then(u => {
-        if (!u) {
-            let user = new User({
-                name: "Vishwa",
-                email: "test@vishwa.com",
-                cart: {
-                    items: []
-                }
-            })
-            user.save();
-        }
-    })
     app.listen(3000);
 }).catch(e => {
     console.log(e);
