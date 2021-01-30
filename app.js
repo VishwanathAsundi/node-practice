@@ -78,10 +78,11 @@ app.use(authRoutes);
 
 app.use(errorController.getNotFound);
 
-mongoose.connect('mongodb+srv://xyz:xyz@cluster0.6lk21.mongodb.net/shop?retryWrites=true&w=majority', {
+mongoose.connect(MongoDB_CONNECT, {
     useUnifiedTopology: true,
     useNewUrlParser: true
 }).then(result => {
+    console.log("Connected!");
     app.listen(3000);
 }).catch(e => {
     console.log(e);
