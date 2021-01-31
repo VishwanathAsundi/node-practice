@@ -8,14 +8,32 @@ const Order = require('../models/order');
 
 let p = path.join(path.dirname(process.mainModule.filename), 'data', 'cart.json');
 
+
+const ITEMS_PER_PAGE = 1;
+let totalItems;
+
+
 exports.getIndex = (req, res, next) => {
-    Product.find()
-        .then(products => {
+    let page = +req.query.page || 1;
+
+    Product.find().countDocuments()
+        .then(total => {
+            totalItems = total;
+            return Product.find()
+                .skip((page - 1) * ITEMS_PER_PAGE)
+                .limit(ITEMS_PER_PAGE);
+        }).then(products => {
             res.render('shop/index', {
                 prods: products,
                 pageTitle: 'Shop',
                 path: '/',
-
+                currentPage: page,
+                totalProducts: totalItems,
+                hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+                hasPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
             });
         })
         .catch(e => {
@@ -55,16 +73,28 @@ exports.deleteCartItem = (req, res, next) => {
 }
 
 exports.getShopProducts = (req, res, next) => {
+    let page = +req.query.page || 1;
 
-    Product.find()
-        .then(products => {
+    Product.find().countDocuments()
+        .then(total => {
+            totalItems = total;
+            return Product.find()
+                .skip((page - 1) * ITEMS_PER_PAGE)
+                .limit(ITEMS_PER_PAGE);
+        }).then(products => {
             res.render('shop/product-list', {
                 prods: products,
                 pageTitle: 'Products',
                 path: '/products',
+                currentPage: page,
+                totalProducts: totalItems,
+                hasNextPage: ITEMS_PER_PAGE * page < totalItems,
+                hasPreviousPage: page > 1,
+                nextPage: page + 1,
+                previousPage: page - 1,
+                lastPage: Math.ceil(totalItems / ITEMS_PER_PAGE)
             });
-        })
-        .catch(e => {
+        }).catch(e => {
             const error = new Error(e);
             error.httpStatusCode = 500;
             return next(error);
