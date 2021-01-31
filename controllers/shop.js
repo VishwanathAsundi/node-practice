@@ -16,8 +16,10 @@ exports.getIndex = (req, res, next) => {
             });
         })
         .catch(e => {
-            console.log(e);
-        })
+            const error = new Error(e);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 }
 exports.getProduct = (req, res, next) => {
     const prodId = req.params.productId;
@@ -30,7 +32,9 @@ exports.getProduct = (req, res, next) => {
                 path: '/products',
             })
         }).catch(e => {
-            console.log(e);
+            const error = new Error(e);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 }
 
@@ -41,8 +45,10 @@ exports.deleteCartItem = (req, res, next) => {
         console.log("An item deleted from the cart");
         res.redirect('/cart');
     }).catch(e => {
-        console.log(e);
-    })
+        const error = new Error(e);
+        error.httpStatusCode = 500;
+        return next(error);
+    });
 }
 
 exports.getShopProducts = (req, res, next) => {
@@ -56,8 +62,10 @@ exports.getShopProducts = (req, res, next) => {
             });
         })
         .catch(e => {
-            console.log(e);
-        })
+            const error = new Error(e);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 }
 
 exports.postOrder = (req, res, next) => {
@@ -88,7 +96,9 @@ exports.postOrder = (req, res, next) => {
             res.redirect('/orders');
         })
         .catch(e => {
-            console.log(e)
+            const error = new Error(e);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 
 }
@@ -103,8 +113,10 @@ exports.postCart = (req, res, next) => {
             res.redirect('/cart');
         })
         .catch(e => {
-            console.log(e);
-        })
+            const error = new Error(e);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 }
 exports.getOrders = (req, res, next) => {
 
@@ -118,8 +130,10 @@ exports.getOrders = (req, res, next) => {
             orders: orders,
         })
     }).catch(e => {
-        console.log(e);
-    })
+        const error = new Error(e);
+        error.httpStatusCode = 500;
+        return next(error);
+    });
 
 
 }
@@ -143,7 +157,9 @@ exports.getCartProducts = (req, res, next) => {
                 products: products,
             })
         }).catch(e => {
-            console.log(e)
+            const error = new Error(e);
+            error.httpStatusCode = 500;
+            return next(error);
         });
 
 }

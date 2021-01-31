@@ -61,8 +61,9 @@ app.use((req, res, next) => {
     User.findById(req.session.user._id).then(user => {
         req.user = user;
         next();
-    }).then(e => {
+    }).catch(e => {
         console.log(e);
+        throw new Error(e);
     })
 });
 
@@ -76,7 +77,13 @@ app.use('/admin', adminRoutes);
 app.use(shopRoutes);
 app.use(authRoutes);
 
+app.use('/500', errorController.get500Error);
+
 app.use(errorController.getNotFound);
+
+app.use((error, req, res, next) => {
+    res.redirect('/500');
+})
 
 mongoose.connect(MongoDB_CONNECT, {
     useUnifiedTopology: true,

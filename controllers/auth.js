@@ -175,8 +175,10 @@ exports.postSignup = (req, res, next) => {
             })
 
         }).catch(e => {
-            console.log(e);
-        })
+            const error = new Error(e);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 
 
 };
@@ -224,8 +226,10 @@ exports.postReset = (req, res, next) => {
                 `
             })
         }).catch(e => {
-            console.log(e);
-        })
+            const error = new Error(e);
+            error.httpStatusCode = 500;
+            return next(error);
+        });
 
     })
 
@@ -254,8 +258,10 @@ exports.getNewPassword = (req, res, next) => {
             resetToken: token
         });
     }).catch(e => {
-        console.log(e);
-    })
+        const error = new Error(e);
+        error.httpStatusCode = 500;
+        return next(error);
+    });
 }
 exports.updatePassword = (req, res, next) => {
     const newPassword = req.body.password;
@@ -281,6 +287,8 @@ exports.updatePassword = (req, res, next) => {
         console.log("Password update is success");
         res.redirect('/login');
     }).catch(e => {
-        console.log(e);
-    })
+        const error = new Error(e);
+        error.httpStatusCode = 500;
+        return next(error);
+    });
 }
