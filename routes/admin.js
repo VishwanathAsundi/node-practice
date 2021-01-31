@@ -20,7 +20,6 @@ router.post('/add-product',
             min: 3
         }).isString().trim(),
         check('price').isNumeric(),
-        check('imageUrl').isURL(),
         check('description').isLength({
             min: 5,
             max: 200
@@ -39,7 +38,6 @@ router.post('/update-product',
             min: 3
         }).isString().trim(),
         check('price').isNumeric(),
-        check('imageUrl').isURL(),
         check('description').isLength({
             min: 5,
             max: 200

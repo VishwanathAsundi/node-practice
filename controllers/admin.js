@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Product = require('../models/product');
+const fileHelper = require('../util/file');
 const {
     validationResult
 } = require('express-validator');
@@ -7,10 +8,29 @@ const {
 exports.postAddProduct = (req, res, next) => {
     const {
         title,
-        imageUrl,
         price,
         description
     } = req.body;
+
+    const image = req.file;
+
+    if (!image) {
+        return res.render('admin/edit-product', {
+            pageTitle: 'Add Product',
+            path: '/admin/add-product',
+            product: {
+                title: title,
+                price: price,
+                description: description
+            },
+            editing: false,
+            hasErrors: true,
+            errorMsg: 'Attached file is not an image',
+            validationErros: []
+        });
+    }
+    console.log(image, "image");
+    const imageUrl = image.path;
 
     const errors = validationResult(req);
 
@@ -20,7 +40,6 @@ exports.postAddProduct = (req, res, next) => {
             path: '/admin/add-product',
             product: {
                 title: title,
-                imageUrl: imageUrl,
                 price: price,
                 description: description
             },
@@ -31,7 +50,6 @@ exports.postAddProduct = (req, res, next) => {
         });
     }
     let product = new Product({
-        _id: new mongoose.Types.ObjectId('6015157220c3ae770ebcd55c'),
         title: title,
         imageUrl: imageUrl,
         price: price,
@@ -52,10 +70,26 @@ exports.postUpdateProduct = (req, res, next) => {
     const {
         productId,
         title,
-        imageUrl,
         price,
         description
     } = req.body;
+
+    const image = req.file;
+    if (!image) {
+        return res.render('admin/edit-product', {
+            pageTitle: 'Edit Product',
+            path: '/admin/edit-product',
+            product: {
+                title: title,
+                price: price,
+                description: description
+            },
+            editing: false,
+            hasErrors: true,
+            errorMsg: 'Attached file is not an image',
+            validationErros: []
+        });
+    }
 
     const errors = validationResult(req);
 
@@ -65,7 +99,6 @@ exports.postUpdateProduct = (req, res, next) => {
             path: '/admin/edit-product',
             product: {
                 title: title,
-                imageUrl: imageUrl,
                 price: price,
                 description: description,
                 _id: productId
@@ -82,8 +115,11 @@ exports.postUpdateProduct = (req, res, next) => {
         }
         product.title = title;
         product.price = price;
-        product.imageUrl = imageUrl;
         product.description = description;
+        if (image) {
+            fileHelper.deleteFile(product.imageUrl);
+            product.imageUrl = image.path;
+        }
         return product.save().then(result => {
             console.log("Product gets updated!");
             res.redirect('/admin/products');
@@ -96,9 +132,16 @@ exports.postUpdateProduct = (req, res, next) => {
 }
 exports.deleteProduct = (req, res, next) => {
     const prodId = req.params.productId;
-    Product.deleteOne({
-        _id: prodId,
-        userId: req.user._id
+
+    Product.findById(prodId).then(product => {
+        if (!product) {
+            return next(new Error('The product not found!'));
+        }
+        fileHelper.deleteFile(product.imageUrl);
+        return Product.deleteOne({
+            _id: prodId,
+            userId: req.user._id
+        });
     }).then(result => {
         console.log("product deleted!");
         res.redirect('/admin/products');
